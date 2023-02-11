@@ -37,9 +37,9 @@ export async function POSTRentals(req, res) {
     {
         const game = await db.query(`SELECT * FROM games WHERE id=$1`, [data.gameId]);
         const customer = await db.query(`SELECT * FROM customers WHERE id=$1`, [data.customerId]);
-        const rentals = await db.query('SELECT * FROM rentals JOIN games ON rentals."gameId"=games.id JOIN customers ON rentals."customerId"=customers.id WHERE rentals."gameId"=$1', [data.gameId]);
+        const rentals = await db.query('SELECT * FROM rentals WHERE rentals."gameId"=$1', [data.gameId]);
 
-        if (rentals.rowCount <= 0) return res.sendStatus(400);
+        if (game.rowCount <= 0 || customer.rowCount <= 0) return res.sendStatus(400);
         if (rentals.rowCount >= game.rows[0].stockTotal) return res.sendStatus(400);
 
 
