@@ -3,24 +3,16 @@ import db from "../Config/database.js";
 
 export async function GETRentals(_, res) {
     try {
-        const rentals = await db.query(`SELECT json_build_object(
-            'id', rentals.id,
-            'customerId', rentals."customerId",
-            'gameId', rentals."gameId",
-            'rentDate', rentals."rentDate",
-            'daysRented', rentals."daysRented",
-            'returnDate', rentals."returnDate",
-            'originalPrice', rentals."originalPrice",
-            'delayFee', rentals."delayFee",
-            'customer', json_build_object(
+        const rentals = await db.query(`SELECT rentals.*,
+            json_build_object(
                 'id', customers.id,
                 'name', customers.name
-            ),
-            'game', json_build_object(
+            ) AS customer,
+            json_build_object(
                 'id', games.id,
                 'name', games.name
-            )
-        ) FROM rentals JOIN games ON rentals."gameId" = games.id JOIN customers ON rentals."customerId" = customers.id`);
+            ) AS game
+         FROM rentals JOIN games ON rentals."gameId" = games.id JOIN customers ON rentals."customerId" = customers.id`);
         console.log(rentals.rows);
         res.send(rentals.rows);
     } catch (error) {
