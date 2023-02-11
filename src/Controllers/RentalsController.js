@@ -3,7 +3,24 @@ import db from "../Config/database.js";
 
 export async function GETRentals(_, res) {
     try {
-        const rentals = await db.query(`SELECT * FROM rentals JOIN games ON rentals."gameId" = games.id JOIN customers ON rentals."customerId" = customers.id`);
+        const rentals = await db.query(`SELECT json_build_object(
+            'id', rentals.id,
+            'customerId', rentals."customerId",
+            'gameId', rentals."gameId",
+            'rentDate', rentals."rentDate",
+            'daysRented', rentals."daysRented",
+            'returnDate', rentals."returnDate",
+            'originalPrice', rentals."originalPrice",
+            'delayFee', rentals."delayFee",
+            'customer', json_build_object(
+                'id', customers.id,
+                'name', customers.name
+            ),
+            'game', json_build_object(
+                'id', games.id,
+                'name', games.name
+            )
+        ) FROM rentals JOIN games ON rentals."gameId" = games.id JOIN customers ON rentals."customerId" = customers.id`);
         console.log(rentals.rows);
         res.send(rentals.rows);
     } catch (error) {
@@ -20,9 +37,12 @@ export async function POSTRentals(req, res) {
     {
         const game = await db.query(`SELECT * FROM games WHERE id=$1`, [data.gameId]);
         const customer = await db.query(`SELECT * FROM customers WHERE id=$1`, [data.customerId]);
+        const rentals = await db.query('SELECT * FROM rentals JOIN games ON rentals."gameId"=games.id JOIN customers ON rentals."customerId"=customers.id WHERE rentals."gameId"=$1', [data.gameId]);
 
-        if(game.rowCount <= 0 && customer.rowCount <= 0) return res.sendStatus(400);
-        if (game.rows[0].stockTotal <= 0) return res.sendStatus(400);
+        if (rentals.rowCount <= 0) return res.sendStatus(400);
+        if (rentals.rowCount >= game.rows[0].stockTotal) return res.sendStatus(400);
+
+
 
 
         const rental = {

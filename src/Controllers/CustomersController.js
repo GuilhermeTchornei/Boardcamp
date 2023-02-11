@@ -16,7 +16,7 @@ export async function GETCustomerById(req, res) {
     try {
         const customer = await db.query(`SELECT * FROM customers WHERE id=$1;`, [id]);
         if (!customer.rowCount > 0) return res.sendStatus(404);
-        res.send(customer.rows);
+        res.send(customer.rows[0]);
     } catch (error) {
         console.log(error);
         res.sendStatus(500);
@@ -42,7 +42,7 @@ export async function PUTCustomer(req, res) {
     const customer = req.body;
 
     try {
-        if ((await db.query(`SELECT * FROM customers WHERE cpf=$1`, [customer.cpf])).rowCount > 0) return res.sendStatus(409);
+        if ((await db.query(`SELECT * FROM customers WHERE cpf=$1 and id<>$2`, [customer.cpf, id])).rowCount > 0) return res.sendStatus(409);
 
         await db.query(`UPDATE customers SET name=$1, phone=$2, cpf=$3, birthday=$4 WHERE id=$5`, [customer.name, customer.phone, customer.cpf, customer.birthday, id]);
         res.sendStatus(200);
